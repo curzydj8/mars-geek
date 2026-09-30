@@ -5,102 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>火星极客 Mars Geek — 把硬核知识，做成好玩的东西</title>
 <meta name="description" content="火星极客 Mars Geek：编程语言图鉴、DOS / PowerShell 命令知识库、微信小游戏《红色星球计划》。把硬核知识，做成好玩的东西。">
-<style>
-:root{
-  --bg:#070b16; --bg2:#0c1224; --card:rgba(255,255,255,.045);
-  --line:rgba(255,255,255,.09); --txt:#eef1f8; --mut:#9aa3bd;
-  --mars:#ff5a36; --mars2:#ff9a3c; --ice:#7dd3fc;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--txt);
-  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
-  line-height:1.7;overflow-x:hidden}
-#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
-.wrap{max-width:1120px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
-/* nav */
-nav{position:fixed;top:0;left:0;right:0;z-index:50;
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  background:rgba(7,11,22,.72);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:1px;text-decoration:none;color:var(--txt)}
-.logo .dot{width:30px;height:30px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,#ffb37a,#ff5a36 55%,#a32c12);
-  box-shadow:0 0 18px rgba(255,90,54,.55)}
-.navlinks{display:flex;gap:26px}
-.navlinks a{color:var(--mut);text-decoration:none;font-size:14.5px;transition:color .2s}
-.navlinks a:hover{color:var(--txt)}
-@media(max-width:640px){.navlinks{display:none}}
-/* hero */
-.hero{min-height:96vh;display:flex;align-items:center;padding:130px 0 70px;position:relative}
-.hero h1{font-size:clamp(44px,7.5vw,88px);font-weight:900;letter-spacing:2px;line-height:1.25;
-  background:linear-gradient(100deg,#fff 20%,var(--mars2) 55%,var(--mars) 80%);
-  -webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .en{font-size:clamp(15px,2.4vw,21px);letter-spacing:10px;color:var(--mut);margin:14px 0 6px;font-weight:600}
-.hero p.sub{font-size:clamp(16px,2.6vw,20px);color:var(--mut);max-width:640px;margin:18px 0 36px}
-.cta{display:flex;gap:14px;flex-wrap:wrap}
-.btn{display:inline-block;padding:13px 30px;border-radius:999px;font-size:16px;font-weight:700;
-  text-decoration:none;transition:transform .18s,box-shadow .18s}
-.btn.solid{background:linear-gradient(120deg,var(--mars),#e03e1f);color:#fff;
-  box-shadow:0 8px 28px rgba(255,90,54,.35)}
-.btn.solid:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(255,90,54,.5)}
-.btn.ghost{border:1px solid var(--line);color:var(--txt);background:var(--card)}
-.btn.ghost:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.25)}
-.marsball{position:absolute;right:-60px;top:16%;width:min(38vw,420px);aspect-ratio:1;border-radius:50%;
-  background:radial-gradient(circle at 32% 30%,#ffc79a 0%,#ff8a4d 28%,#e0512a 55%,#7e2410 82%,#3d1006 100%);
-  box-shadow:0 0 120px rgba(255,90,54,.35),inset -30px -30px 80px rgba(0,0,0,.5);
-  opacity:.9;z-index:0}
-@media(max-width:820px){.marsball{opacity:.28;right:-120px}}
-/* sections */
-section{padding:84px 0}
-.sec-title{font-size:clamp(26px,4vw,36px);font-weight:800;margin-bottom:10px;letter-spacing:1px}
-.sec-title .hl{color:var(--mars2)}
-.sec-sub{color:var(--mut);margin-bottom:44px;max-width:680px}
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 18px;text-align:center;
-  backdrop-filter:blur(6px)}
-.stat b{display:block;font-size:clamp(26px,4vw,38px);font-weight:900;
-  background:linear-gradient(120deg,var(--mars2),var(--mars));-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat span{font-size:13.5px;color:var(--mut)}
-@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
-/* products */
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-@media(max-width:760px){.grid2{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 28px;
-  transition:transform .2s,border-color .2s,box-shadow .2s;position:relative;overflow:hidden}
-.card:hover{transform:translateY(-4px);border-color:rgba(255,154,60,.4);box-shadow:0 18px 44px rgba(0,0,0,.4)}
-.card .icon{font-size:34px;margin-bottom:14px}
-.card h3{font-size:21px;margin-bottom:8px;letter-spacing:.5px}
-.card p{color:var(--mut);font-size:14.5px;margin-bottom:18px;min-height:72px}
-.badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:14px;letter-spacing:1px}
-.badge.live{background:rgba(52,211,153,.14);color:#34d399;border:1px solid rgba(52,211,153,.35)}
-.badge.soon{background:rgba(255,154,60,.12);color:var(--mars2);border:1px solid rgba(255,154,60,.35)}
-.badge.dev{background:rgba(125,211,252,.12);color:var(--ice);border:1px solid rgba(125,211,252,.35)}
-.card a.more{color:var(--mars2);text-decoration:none;font-weight:700;font-size:14.5px}
-.card a.more:hover{text-decoration:underline}
-/* knowledge */
-.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-@media(max-width:760px){.kgrid{grid-template-columns:1fr}}
-.k{background:linear-gradient(160deg,rgba(255,90,54,.08),rgba(255,255,255,.02));
-  border:1px solid var(--line);border-radius:20px;padding:30px 26px}
-.k .num{font-size:40px;font-weight:900;color:var(--mars2)}
-.k h3{font-size:19px;margin:10px 0 8px}
-.k p{color:var(--mut);font-size:14.5px}
-/* about */
-.about{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.about p{color:var(--mut);max-width:760px;font-size:16px}
-.about p+p{margin-top:16px}
-.about strong{color:var(--txt)}
-/* footer */
-footer{padding:52px 0 40px;text-align:center;color:var(--mut);font-size:13.5px}
-footer .flinks{margin-bottom:18px;display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
-footer a{color:var(--mut);text-decoration:none}
-footer a:hover{color:var(--mars2)}
-/* reveal */
-.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
-.rv.on{opacity:1;transform:none}
-</style>
+<link rel="stylesheet" href="/assets/css/landing.css">
 </head>
 <body>
 <canvas id="stars"></canvas>
@@ -112,6 +17,7 @@ footer a:hover{color:var(--mars2)}
       <a href="#products">产品</a>
       <a href="#data">知识库</a>
       <a href="#about">关于</a>
+      <a href="/login.html" class="login-link">登录</a>
     </div>
   </div>
 </nav>
@@ -215,28 +121,7 @@ footer a:hover{color:var(--mars2)}
   </div>
 </footer>
 
-<script>
-// 星空
-(function(){
-  var c=document.getElementById('stars'),x=c.getContext('2d'),S=[];
-  function rs(){c.width=innerWidth;c.height=innerHeight}
-  rs();addEventListener('resize',rs);
-  for(var i=0;i<160;i++)S.push({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.3,s:Math.random()*.35+.06,o:Math.random()*.6+.25});
-  (function anim(){
-    x.clearRect(0,0,c.width,c.height);
-    for(var i=0;i<S.length;i++){var s=S[i];s.y+=s.s/c.height;if(s.y>1)s.y=0;
-      x.globalAlpha=s.o*(0.6+0.4*Math.sin(Date.now()/900+i));
-      x.fillStyle='#cfe0ff';x.beginPath();x.arc(s.x*c.width,s.y*c.height,s.r,0,7);x.fill();}
-    x.globalAlpha=1;requestAnimationFrame(anim);
-  })();
-})();
-// 滚动显现
-(function(){
-  var io=new IntersectionObserver(function(es){
-    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}});
-  },{threshold:.12});
-  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
-})();
-</script>
+
+<script src="/assets/js/landing.js"></script>
 </body>
 </html>
