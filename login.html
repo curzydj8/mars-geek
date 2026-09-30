@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · 火星极客 Mars Geek</title>
+<meta name="description" content="火星极客后台登录">
+<link rel="stylesheet" href="/assets/css/auth.css">
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="mars-glow"></div>
+<div class="wrap">
+  <div class="brand">
+    <a href="/"><div class="logo"></div>
+    <h1>火星极客<span class="en">MARS GEEK · 后台</span></h1></a>
+  </div>
+  <div class="card">
+    <h2>欢迎回来</h2>
+    <p class="sub">登录以进入后台管理界面</p>
+    <form id="loginForm" novalidate>
+      <div class="alert"></div>
+      <div class="field" data-field="identifier">
+        <label for="identifier">邮箱 / 用户名</label>
+        <input id="identifier" name="identifier" type="text" placeholder="you@example.com" autocomplete="username" autofocus>
+        <div class="ferr"></div>
+      </div>
+      <div class="field" data-field="password">
+        <label for="password">密码</label>
+        <div class="pw-wrap">
+          <input id="password" name="password" type="password" placeholder="请输入密码" autocomplete="current-password">
+          <button type="button" class="pw-toggle">显示</button>
+        </div>
+        <div class="ferr"></div>
+      </div>
+      <button class="btn" id="submitBtn" type="submit"><span class="spinner"></span><span class="btn-text">登 录</span></button>
+    </form>
+    <div class="links">
+      <a href="/forgot.html">忘记密码？</a><br>
+      还没有账户？<a href="/register.html">立即注册</a>
+    </div>
+  </div>
+  <div class="back-home"><a href="/">← 返回品牌官网</a></div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+(function () {
+  'use strict';
+  AuthUI.bindPwToggle();
+  const form = document.getElementById('loginForm');
+  const btn = document.getElementById('submitBtn');
+
+  // 已登录直接进后台
+  AuthUI.redirectIfLoggedIn();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    AuthUI.clearErrors(form);
+    const identifier = form.identifier.value.trim();
+    const password = form.password.value;
+    let bad = false;
+    if (!identifier) { AuthUI.applyApiError(form, { message: '请输入邮箱或用户名', details: { identifier: '请输入邮箱或用户名' } }); bad = true; }
+    if (!password && !bad) { AuthUI.applyApiError(form, { message: '请输入密码', details: { password: '请输入密码' } }); bad = true; }
+    if (bad) return;
+    await AuthUI.withLoading(btn, async () => {
+      try {
+        const data = await MG.post('/api/auth/login', { identifier, password });
+        MG.setToken(data.accessToken);
+        btn.querySelector('.btn-text').textContent = '登录成功，正在进入…';
+        location.href = AuthUI.getNext();
+      } catch (err) {
+        AuthUI.applyApiError(form, err);
+        btn.querySelector('.btn-text').textContent = '登 录';
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
