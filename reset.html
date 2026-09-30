@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>重置密码 · 火星极客 Mars Geek</title>
+<link rel="stylesheet" href="/assets/css/auth.css">
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="mars-glow"></div>
+<div class="wrap">
+  <div class="brand">
+    <a href="/"><div class="logo"></div>
+    <h1>火星极客<span class="en">MARS GEEK · 后台</span></h1></a>
+  </div>
+  <div class="card">
+    <h2>设置新密码</h2>
+    <p class="sub">重置后所有已登录设备将被登出，请重新登录</p>
+    <form id="resetForm" novalidate>
+      <div class="alert"></div>
+      <div class="field" data-field="password">
+        <label for="password">新密码</label>
+        <div class="pw-wrap">
+          <input id="password" name="password" type="password" placeholder="至少 8 位，含 3 种字符类型" autocomplete="new-password" autofocus>
+          <button type="button" class="pw-toggle">显示</button>
+        </div>
+        <div class="strength"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="lbl"></span></div>
+        <div class="ferr"></div>
+      </div>
+      <div class="field" data-field="confirmPassword">
+        <label for="confirm">确认新密码</label>
+        <input id="confirm" name="confirmPassword" type="password" placeholder="再次输入新密码" autocomplete="new-password">
+        <div class="ferr"></div>
+      </div>
+      <button class="btn" id="submitBtn" type="submit"><span class="spinner"></span><span class="btn-text">重置密码</span></button>
+    </form>
+    <div class="links"><a href="/login.html">返回登录</a></div>
+  </div>
+  <div class="back-home"><a href="/">← 返回品牌官网</a></div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+(function () {
+  'use strict';
+  AuthUI.bindPwToggle();
+  AuthUI.bindStrength('password');
+  const form = document.getElementById('resetForm');
+  const btn = document.getElementById('submitBtn');
+  const token = new URLSearchParams(location.search).get('token');
+
+  if (!token) {
+    AuthUI.showAlert(form, 'error', '重置链接无效，请重新申请忘记密码邮件。');
+    btn.disabled = true;
+    return;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    AuthUI.clearErrors(form);
+    const password = form.password.value;
+    const confirmPassword = form.confirm.value;
+    if (password !== confirmPassword) {
+      AuthUI.applyApiError(form, { message: '两次输入的密码不一致', details: { confirmPassword: '两次输入的密码不一致' } });
+      return;
+    }
+    await AuthUI.withLoading(btn, async () => {
+      try {
+        const data = await MG.post('/api/auth/reset-password', { token, password, confirmPassword });
+        AuthUI.showAlert(form, 'success', (data.message || '密码已重置') + '，2 秒后跳转登录…');
+        setTimeout(() => { location.href = '/login.html'; }, 2000);
+      } catch (err) {
+        AuthUI.applyApiError(form, err);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
