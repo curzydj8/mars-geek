@@ -1,7 +1,7 @@
 // ============================================================
 // main.js —— 启动装配 + 主循环（rAF 渲染 + 定时 sim）
 // ============================================================
-import { BUILDINGS, MAP_W, MAP_H, AUTOSAVE_SEC } from './config.js';
+import { BUILDINGS, MAP_W, MAP_H, AUTOSAVE_SEC, TILE } from './config.js';
 import { createInitialState } from './state.js';
 import {
   tick, placeBuilding, demolishBuilding, upgradeBuilding,
@@ -10,6 +10,7 @@ import {
 import { createRenderer } from './render.js';
 import { createInput } from './input.js';
 import { createUI } from './ui.js';
+import { playDescent } from './descent.js';
 import {
   saveGame, loadGame, deleteSlot, hasAnySave, wipeAll,
   slotInfo, formatTime, SLOTS,
@@ -106,7 +107,7 @@ function actions_onPanelAction(action, ds) {
       if (confirm('确定删除这个存档吗？')) { deleteSlot(ds.id); ui.refreshPanel(); }
       break;
     case 'new-colony':
-      if (confirm('开始新的殖民地？当前进度请先手动保存。')) startNewGame();
+      if (confirm('开始新的殖民地？当前进度请先手动保存。')) beginDescent();
       break;
     case 'to-title':
       saveGame(state, 'auto');
@@ -116,15 +117,29 @@ function actions_onPanelAction(action, ds) {
 }
 
 // ---------- 流程 ----------
+function centerCameraOnLanding() {
+  const pod = state.buildings.find(b => b.type === 'landing_pod');
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (pod) {
+    const def = BUILDINGS[pod.type];
+    state.camera.x = (pod.tx + def.w / 2) * TILE - cw / 2;
+    state.camera.y = (pod.ty + def.h / 2) * TILE - ch / 2;
+  } else {
+    state.camera.x = (MAP_W * TILE - cw) / 2;
+    state.camera.y = (MAP_H * TILE - ch) / 2;
+  }
+  input.clampCam(state.camera);
+}
+
 function enterGame(s, msg) {
   state = s;
   renderer.buildTerrain(state.seed);
-  input.clampCam(state.camera);
-  view.panel = null; view.selectedId = null;
-  view.placing = null; view.ghost = null; view.showGrid = false;
   document.getElementById('start-screen').hidden = true;
   document.getElementById('game-screen').hidden = false;
   renderer.resize();
+  centerCameraOnLanding();
+  view.panel = null; view.selectedId = null;
+  view.placing = null; view.ghost = null; view.showGrid = false;
   ui.renderLog();
   ui.refreshHUD();
   ui.refreshPanel();
@@ -136,6 +151,20 @@ function startNewGame() {
   enterGame(s);
   ui.gameLog('🛬 登陆舱成功着陆火星！从这里开始建造人类第一个家园。');
   ui.gameLog('💡 点击左侧「建造」扩张基地，点击建筑查看详情。');
+}
+
+// 开局降落过场：太空 → 大气层 → 着陆，再进入游戏
+function beginDescent() {
+  const ds = document.getElementById('descent-screen');
+  ds.hidden = false;
+  playDescent(
+    document.getElementById('descent-canvas'),
+    () => startNewGame(),                       // 闪光中切到游戏屏
+    () => {                                     // 过场结束
+      ds.hidden = true;
+      ui.gameLog('🤖 MARS CORE AI 已接管基地控制系统。');
+    },
+  );
 }
 
 function showTitle() {
@@ -168,7 +197,7 @@ function renderTitleSlots() {
 
 document.getElementById('btn-new').addEventListener('click', () => {
   if (hasAnySave() && !confirm('开始新殖民地将覆盖当前未保存的进度，继续吗？')) return;
-  startNewGame();
+  beginDescent();
 });
 document.getElementById('btn-load').addEventListener('click', () => {
   const box = document.getElementById('load-slots');
