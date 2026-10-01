@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>火星殖民地 Mars Colony · 火星极客</title>
+<meta name="description" content="火星殖民地：在浏览器中建造人类第一个火星家园。采集资源、建造设施、研究科技，扩张你的殖民地。">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+
+<!-- ============ 标题屏 ============ -->
+<div id="start-screen">
+  <canvas id="star-canvas"></canvas>
+  <div class="title-wrap">
+    <div class="mars-orb"></div>
+    <h1>MARS<br><span>COLONY</span></h1>
+    <p class="tagline">Build Humanity's First Home on Mars</p>
+    <div class="menu">
+      <button id="btn-new" class="mbtn primary">🆕&nbsp; NEW COLONY</button>
+      <button id="btn-load" class="mbtn">📂&nbsp; LOAD COLONY</button>
+      <button id="btn-settings" class="mbtn">⚙️&nbsp; SETTINGS</button>
+    </div>
+    <div id="load-slots" class="slots" hidden></div>
+    <div id="settings-pane" class="slots" hidden>
+      <h3>设置</h3>
+      <p class="fine">单机网页存档模式：进度保存在本机浏览器（localStorage），自动保存每 60 秒一次。</p>
+      <button id="btn-wipe" class="mbtn danger">🗑️ 清除所有本地存档</button>
+    </div>
+    <p class="brand">火星极客 MARS GEEK 出品</p>
+  </div>
+</div>
+
+<!-- ============ 游戏屏 ============ -->
+<div id="game-screen" hidden>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="topbar"></div>
+
+  <div id="toolbar">
+    <button data-panel="build" title="建造">🏗️<span>建造</span></button>
+    <button data-panel="research" title="科研">🔬<span>科研</span></button>
+    <button data-panel="missions" title="任务">🎯<span>任务</span></button>
+    <button data-panel="menu" title="档案">💾<span>档案</span></button>
+  </div>
+
+  <aside id="side-panel" hidden></aside>
+
+  <div id="event-log"></div>
+
+  <div class="time-controls">
+    <span id="clock">Sol 1 · 08:00</span>
+    <button data-speed="pause" title="暂停">⏸️</button>
+    <button data-speed="1" title="正常速度">1x</button>
+    <button data-speed="2" title="双倍速度">2x</button>
+  </div>
+
+  <div id="alerts"></div>
+  <div id="place-hint" hidden></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+<script type="module" src="js/title-bg.js"></script>
+</body>
+</html>
