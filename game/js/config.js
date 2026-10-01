@@ -4,8 +4,8 @@
 // ============================================================
 
 export const TILE = 48;          // 每格像素
-export const MAP_W = 56;         // 地图宽（格）
-export const MAP_H = 36;         // 地图高（格）
+export const MAP_W = 128;        // 地图宽（格）——巨大的火星表面
+export const MAP_H = 80;         // 地图高（格）
 
 // 1 游戏分钟 = 1 现实秒（1x 速度）
 export const MIN_PER_SEC = 1;
