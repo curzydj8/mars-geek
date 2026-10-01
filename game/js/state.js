@@ -8,14 +8,14 @@ let nextId = 1;
 export function genId() { return 'b' + (nextId++) + '_' + Date.now().toString(36); }
 export function resetIdCounter() { nextId = 1; }
 
-// 初始建筑布局（格坐标，地图中央附近）
+// 初始建筑布局（格坐标，地图中央附近：128×80 的中心约 (64,40)）
 const INITIAL_BUILDINGS = [
-  { type: 'landing_pod',      tx: 27, ty: 16 },
-  { type: 'solar_panel',      tx: 25, ty: 16 },
-  { type: 'solar_panel',      tx: 25, ty: 18 },
-  { type: 'oxygen_generator', tx: 30, ty: 16 },
-  { type: 'water_extractor',  tx: 30, ty: 18 },
-  { type: 'storage',          tx: 27, ty: 19 },
+  { type: 'landing_pod',      tx: 63, ty: 39 },
+  { type: 'solar_panel',      tx: 61, ty: 39 },
+  { type: 'solar_panel',      tx: 61, ty: 41 },
+  { type: 'oxygen_generator', tx: 66, ty: 39 },
+  { type: 'water_extractor',  tx: 66, ty: 41 },
+  { type: 'storage',          tx: 63, ty: 42 },
 ];
 
 export function createInitialState(seed) {
@@ -45,9 +45,7 @@ export function createInitialState(seed) {
     popTimer: 0,        // 人口增长计时（游戏分钟）
     leaveTimer: 0,      // 人口离开计时
   };
-  // 相机初始居中到基地
-  state.camera.x = 28 * 48 - 480;
-  state.camera.y = 17 * 48 - 320;
+  // 相机初始位置由 main.js enterGame() 按着陆舱居中（需等 canvas 可见）
   return state;
 }
 
