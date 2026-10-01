@@ -14,6 +14,8 @@
 | 居民 | citizens.json | 职业 40 / 特征 60 | 职业 8 / 特征 6 |
 | 动物 | animals.json | 30 | 6 |
 | 事件 | events.json | 100 | 8 |
+| 物流 | logistics.json | 批次 20 | 批次 4 |
+| 星球 | planets.json | 太阳系主要天体 | 火星 1 |
 
 **核心原则**：schema 一次设计到位、支撑全量规模；内容按 MVP 子集分批填充。
 种子条目标记 `"mvp": true` 的，是 v0.2 首批接入游戏的部分。
@@ -151,6 +153,49 @@
 }
 ```
 
+## 3.7 logistics.json —— 星舰物流
+
+```jsonc
+{
+  "launch_window": {"period_months": 26, "transit_months": [6, 9],
+    "note_zh": "火星窗口约26个月一次，玩家必须提前规划"},
+  "starship_class": {"id": "ship.starship_cargo", "payload_mass_t": 100,
+    "payload_volume_m3": 1000, "fuel_t": 1200, "risk_per_trip": 0.05},
+  "batches": [{
+    "id": "batch.1", "name": {"zh": "第1批：能源设备"},
+    "ships": 5,
+    "cargo": [{"kind": "building", "id": "bld.solar_array", "count": 4},
+              {"kind": "resource", "id": "res.steel", "amount": 200}],
+    "requires": [],                        // batch.* 或 bld.* 的 ID
+    "condition_zh": "人类批次需满足电力/氧气/水/居住条件",
+    "mvp": true
+  }],
+  "receiving": [{"building": "bld.landing_pad", "role_zh": "硬化着陆场，无之则星舰无法降落"}]
+}
+```
+
+- `cargo.kind`: `building`（count 座）或 `resource`（amount 单位）。
+- 批次是**玩家规划运输的核心界面**，对应宪法"物流先行"原则。
+
+## 3.8 planets.json —— 自然层
+
+```jsonc
+{"bodies": [{
+  "id": "planet.mars", "gravity_g": 0.38, "pressure_kpa": 0.6,
+  "atmosphere": {"co2": 0.95, "n2": 0.027, "ar": 0.016},
+  "temp_c": {"day_max": 20, "night_min": -80},
+  "radiation": {"surface_msv_per_year": 240},
+  "solar": {"flux_w_per_m2": 590, "dust_storm_penalty": 0.7},
+  "water_ice": [{"id": "ice.midlat", "region_zh": "中纬度地下",
+                 "depth_m": 5, "purity": 0.6}],
+  "regolith": {"note_zh": "可激光烧结为建材"},
+  "day_length_h": 24.6, "mvp": true
+}]}
+```
+
+- 自然层**玩家无法控制，只能适应**：选址（水冰）、防辐射、尘暴预案都从这里推导。
+- 改造纪元（era 9）会写入 `terraforming` 覆盖字段（后续版本）。
+
 ## 4. 效果 DSL（effects 通用语法）
 
 所有"产生效果"的地方（科技、特征、事件、建筑升级）统一使用：
@@ -213,4 +258,6 @@
 - technologies.json：18 条（生存 4 / ISRU 6 / 工业自动化 3 / 生态 2 / AI 1 / 改造 2），mvp 9 条
 - citizens.json：职业 8 / 特征 6
 - animals.json：6 条
-- events.json：8 条，mvp 5 条
+- logistics.json：4 个批次（mvp 3 条）
+- planets.json：火星 1
+- 新增资源：res.heat（热量，t1 生存，瞬时型）→ resources.json 共 31 条
