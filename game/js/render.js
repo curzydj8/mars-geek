@@ -26,65 +26,55 @@ const DUNE_C = [214, 130, 88];
 
 export function createRenderer(canvas) {
   const ctx = canvas.getContext('2d');
-  let terrain = null;
   let dpr = 1;
+
+  // ---- 地形：确定性生成，无大离屏 canvas（支持 128×80 大地图） ----
+  let features = null;   // { dunes, rocks, craters }，buildTerrain(seed) 生成
+  let terrainSeed = 1;
+
+  // (tx,ty) → [0,1) 确定性哈希：同一格子永远同一颜色
+  function hash2(seed, x, y) {
+    let h = (seed ^ Math.imul(x, 374761393) ^ Math.imul(y, 668265263)) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  // ---- 地形特征（按种子生成，绘制时视锥剔除） ----
+  function buildTerrain(seed) {
+    terrainSeed = seed >>> 0;
+    const rnd = mulberry32(terrainSeed);
+    const areaK = (MAP_W * MAP_H) / (56 * 36); // 相对旧地图的面积倍数
+    const W = MAP_W * TILE, H = MAP_H * TILE;
+    features = { dunes: [], rocks: [], craters: [] };
+    const nD = Math.round(46 * areaK);
+    const nR = Math.round(260 * areaK);
+    const nC = Math.max(8, Math.round(7 * Math.sqrt(areaK)));
+    for (let i = 0; i < nD; i++) {
+      features.dunes.push({
+        x: rnd() * W, y: rnd() * H,
+        w: 40 + rnd() * 110, h: 10 + rnd() * 22,
+        rot: rnd() * Math.PI, lw: 3 + rnd() * 5,
+      });
+    }
+    for (let i = 0; i < nR; i++) {
+      features.rocks.push({
+        x: rnd() * W, y: rnd() * H,
+        r: 2 + rnd() * 7, a: 0.25 + rnd() * 0.4,
+      });
+    }
+    for (let i = 0; i < nC; i++) {
+      features.craters.push({
+        x: rnd() * W, y: rnd() * H,
+        r: 34 + rnd() * 60, tint: rnd(),
+      });
+    }
+  }
 
   function resize() {
     dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = Math.floor(canvas.clientWidth * dpr);
     canvas.height = Math.floor(canvas.clientHeight * dpr);
-  }
-
-  // ---- 地形预渲染 ----
-  function buildTerrain(seed) {
-    terrain = document.createElement('canvas');
-    terrain.width = MAP_W * TILE;
-    terrain.height = MAP_H * TILE;
-    const g = terrain.getContext('2d');
-    const rnd = mulberry32(seed);
-
-    for (let ty = 0; ty < MAP_H; ty++) {
-      for (let tx = 0; tx < MAP_W; tx++) {
-        const n = rnd();
-        g.fillStyle = mixColor(SAND_A, SAND_B, n);
-        g.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-      }
-    }
-    // 沙丘：浅色弧形
-    for (let i = 0; i < 46; i++) {
-      const x = rnd() * terrain.width, y = rnd() * terrain.height;
-      const w = 40 + rnd() * 110, h = 10 + rnd() * 22;
-      g.strokeStyle = 'rgba(226,150,100,0.35)';
-      g.lineWidth = 3 + rnd() * 5;
-      g.beginPath();
-      g.ellipse(x, y, w, h, rnd() * Math.PI, 0, Math.PI * 2);
-      g.stroke();
-    }
-    // 岩石：深色斑点簇
-    for (let i = 0; i < 260; i++) {
-      const x = rnd() * terrain.width, y = rnd() * terrain.height;
-      const r = 2 + rnd() * 7;
-      g.fillStyle = `rgba(90,44,34,${0.25 + rnd() * 0.4})`;
-      g.beginPath();
-      g.arc(x, y, r, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = 'rgba(230,160,110,0.25)';
-      g.beginPath();
-      g.arc(x - r * 0.3, y - r * 0.3, r * 0.45, 0, Math.PI * 2);
-      g.fill();
-    }
-    // 陨石坑
-    for (let i = 0; i < 7; i++) {
-      const x = rnd() * terrain.width, y = rnd() * terrain.height;
-      const r = 34 + rnd() * 60;
-      g.fillStyle = 'rgba(70,32,24,0.55)';
-      g.beginPath(); g.ellipse(x, y, r, r * 0.8, 0, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = 'rgba(225,150,100,0.5)';
-      g.lineWidth = 5;
-      g.beginPath(); g.ellipse(x, y, r + 4, r * 0.8 + 4, 0, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
-      g.fillStyle = mixColor(SAND_A, SAND_B, rnd());
-      g.beginPath(); g.ellipse(x, y, r * 0.55, r * 0.44, 0, 0, Math.PI * 2); g.fill();
-    }
   }
 
   function roundRect(g, x, y, w, h, r) {
@@ -151,7 +141,7 @@ export function createRenderer(canvas) {
   }
 
   function render(state, view) {
-    if (!terrain) buildTerrain(state.seed);
+    if (!features) buildTerrain(state.seed);
     const cam = state.camera;
     const cw = canvas.width / dpr, ch = canvas.height / dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -164,13 +154,55 @@ export function createRenderer(canvas) {
     ctx.translate(-cam.x * cam.zoom, -cam.y * cam.zoom);
     ctx.scale(cam.zoom, cam.zoom);
 
-    // 地形（只画可见区域）
+    // 地形：底色按瓦片哈希绘制（仅可见区域），特征按视锥剔除
     const vx0 = cam.x, vy0 = cam.y;
     const vx1 = cam.x + cw / cam.zoom, vy1 = cam.y + ch / cam.zoom;
-    const sx = Math.max(0, vx0), sy = Math.max(0, vy0);
-    const sw = Math.min(terrain.width, vx1) - sx;
-    const sh = Math.min(terrain.height, vy1) - sy;
-    if (sw > 0 && sh > 0) ctx.drawImage(terrain, sx, sy, sw, sh, sx, sy, sw, sh);
+    // 缩小时合并瓦片绘制，保持帧率
+    const step = cam.zoom < 0.7 ? 2 : 1;
+    const bx0 = Math.max(0, Math.floor(vx0 / TILE / step) * step);
+    const bx1 = Math.min(MAP_W - step, Math.floor(vx1 / TILE / step) * step);
+    const by0 = Math.max(0, Math.floor(vy0 / TILE / step) * step);
+    const by1 = Math.min(MAP_H - step, Math.floor(vy1 / TILE / step) * step);
+    for (let ty = by0; ty <= by1; ty += step) {
+      for (let tx = bx0; tx <= bx1; tx += step) {
+        ctx.fillStyle = mixColor(SAND_A, SAND_B, hash2(terrainSeed, tx, ty));
+        ctx.fillRect(tx * TILE, ty * TILE, TILE * step, TILE * step);
+      }
+    }
+    // 地图外：深空色
+    const inV = (x, y, r) => x + r > vx0 && x - r < vx1 && y + r > vy0 && y - r < vy1;
+    // 沙丘
+    ctx.strokeStyle = 'rgba(226,150,100,0.35)';
+    for (const d of features.dunes) {
+      if (!inV(d.x, d.y, d.w)) continue;
+      ctx.lineWidth = d.lw / cam.zoom + 1;
+      ctx.beginPath();
+      ctx.ellipse(d.x, d.y, d.w, d.h, d.rot, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // 岩石
+    for (const rk of features.rocks) {
+      if (!inV(rk.x, rk.y, rk.r + 2)) continue;
+      ctx.fillStyle = `rgba(90,44,34,${rk.a})`;
+      ctx.beginPath();
+      ctx.arc(rk.x, rk.y, rk.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(230,160,110,0.25)';
+      ctx.beginPath();
+      ctx.arc(rk.x - rk.r * 0.3, rk.y - rk.r * 0.3, rk.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // 陨石坑
+    for (const c of features.craters) {
+      if (!inV(c.x, c.y, c.r + 8)) continue;
+      ctx.fillStyle = 'rgba(70,32,24,0.55)';
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, c.r, c.r * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(225,150,100,0.5)';
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, c.r + 4, c.r * 0.8 + 4, 0, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+      ctx.fillStyle = mixColor(SAND_A, SAND_B, c.tint);
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, c.r * 0.55, c.r * 0.44, 0, 0, Math.PI * 2); ctx.fill();
+    }
 
     // 网格（建造模式或低缩放时）
     if (view.showGrid || cam.zoom < 0.9) {
